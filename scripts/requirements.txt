@@ -1,0 +1,12 @@
+# Confluence Downloader Dependencies
+
+# Core dependencies for downloading
+requests>=2.31.0
+python-dotenv>=1.0.0
+PyYAML>=6.0.1
+
+# HTML to Markdown conversion
+markdownify>=0.11.6
+
+# Optional: HTML parsing for debugging (BeautifulSoup)
+beautifulsoup4>=4.12.0
