@@ -1,21 +1,24 @@
 ---
 name: confluence
-description: This skill should be used when working with Confluence documentation - downloading pages to Markdown, converting between Wiki Markup and Markdown, creating/updating pages via MCP tools, or managing Confluence content programmatically.
+description: This skill should be used when working with Confluence documentation - downloading pages to Markdown, converting between Wiki Markup and Markdown, creating/updating pages via MCP tools or REST API, managing Confluence content with images (Mermaid, PlantUML, regular images), and handling large documents without size limits.
 ---
 
 # Confluence Management Skill
 
 > **Skill Type**: Project
-> **Version**: 2.0.0
-> **Description**: Comprehensive Confluence documentation management with support for downloading pages to Markdown, Wiki Markup conversion, Mermaid diagrams, page management via MCP tools, and integration with the mark CLI tool.
+> **Version**: 2.1.0
+> **Description**: Comprehensive Confluence documentation management with support for downloading pages to Markdown, Wiki Markup conversion, diagram integration (Mermaid, PlantUML), page management via MCP tools and REST API, large document uploads, and comprehensive reference documentation for troubleshooting and best practices.
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [⚠️ CRITICAL: MCP Size Limits](#-critical-mcp-size-limits)
 - [Prerequisites](#prerequisites)
 - [Core Capabilities](#core-capabilities)
+- [Uploading Pages with Images (v2 Script)](#uploading-pages-with-images-v2-script)
 - [Downloading Confluence Pages](#downloading-confluence-pages)
 - [Workflow Guide](#workflow-guide)
+- [Image Handling and Diagram Integration](#image-handling-and-diagram-integration)
 - [Confluence Wiki Markup Reference](#confluence-wiki-markup-reference)
 - [Markdown ↔ Wiki Markup Conversion](#markdown--wiki-markup-conversion)
 - [Mermaid Diagram Integration](#mermaid-diagram-integration)
@@ -23,6 +26,7 @@ description: This skill should be used when working with Confluence documentatio
 - [Atlassian MCP Tools](#atlassian-mcp-tools)
 - [CQL Search Best Practices](#cql-search-best-practices)
 - [Common Workflows](#common-workflows)
+- [Reference Documentation](#reference-documentation)
 - [Troubleshooting](#troubleshooting)
 
 ## Overview
@@ -30,12 +34,46 @@ description: This skill should be used when working with Confluence documentatio
 This skill provides comprehensive Confluence documentation management capabilities through Claude Code. It combines:
 
 - **Page Downloader**: Download Confluence pages to Markdown with full hierarchy and macro conversion
-- **Atlassian MCP Integration**: Direct Confluence API access for reading, creating, and updating pages
+- **Page Uploader (v2)**: Upload large documents with images via REST API (no size limits)
+- **Atlassian MCP Integration**: Direct Confluence API access for reading pages and metadata
 - **Wiki Markup Expertise**: Full support for Confluence Wiki Markup syntax
 - **Markdown Support**: Bidirectional conversion between Markdown and Wiki Markup
-- **Mermaid Diagrams**: Automatic conversion to images and upload to Confluence
+- **Diagram Integration**: Mermaid and PlantUML diagram support via companion skills
+- **Image Handling**: Comprehensive support for regular images, diagrams, and screenshots
 - **mark CLI Integration**: Synchronize Markdown files from Git repositories to Confluence
 - **Advanced Search**: CQL (Confluence Query Language) queries for precise content discovery
+- **Reference Documentation**: Complete guides for storage format, image handling, and troubleshooting
+
+## ⚠️ CRITICAL: MCP Size Limits
+
+**DO NOT USE MCP FOR CONFLUENCE PAGE UPLOADS!**
+
+MCP tools have size limits (typically 10-20KB) and **cannot** upload large documents or pages with multiple images.
+
+### ❌ DO NOT USE for Page Uploads:
+- `mcp__atlassian-evinova__confluence_update_page` - Size limited
+- `mcp__atlassian-evinova__confluence_create_page` - Size limited
+
+### ✅ USE INSTEAD:
+- `scripts/upload_confluence_v2.py` - No size limits, handles large documents with images
+
+**Why This Matters:**
+- MCP works fine for **reading** pages
+- MCP **fails** for **uploading** pages > 10-20KB
+- Large documents with images typically exceed MCP limits
+- REST API via upload script has no practical size limits
+
+**Example:**
+```bash
+# ❌ DON'T: Use MCP for uploads
+# mcp__atlassian-evinova__confluence_update_page(...)
+
+# ✅ DO: Use upload script
+python3 ~/.claude/skills/confluence/scripts/upload_confluence_v2.py \
+    document.md --id 780369923
+```
+
+**See:** [Reference Documentation](#reference-documentation) for complete upload workflows.
 
 ## Prerequisites
 
@@ -106,6 +144,320 @@ This skill provides comprehensive Confluence documentation management capabiliti
 - ✅ Mass updates from Markdown files
 - ✅ Synchronized documentation from Git repositories
 - ✅ Template-based page generation
+
+### 6. Image and Diagram Handling (NEW in v2.1.0)
+- ✅ Upload pages with regular images (PNG, JPG, SVG, GIF)
+- ✅ Mermaid diagram integration via `design-doc-mermaid` skill
+- ✅ PlantUML diagram integration via `plantuml` skill
+- ✅ Automatic image attachment handling
+- ✅ Skip re-uploading existing attachments
+- ✅ Proper HTML escaping prevention (images render correctly)
+- ✅ No size limits for page uploads (REST API)
+- ✅ Support for large documents (> 1MB)
+
+### 7. Reference Documentation (NEW in v2.1.0)
+- ✅ Complete Confluence storage format guide
+- ✅ Image handling best practices
+- ✅ Comprehensive troubleshooting guide
+- ✅ Common errors and solutions
+- ✅ Integration with diagram skills
+
+## Uploading Pages with Images (v2 Script)
+
+**Use Case:** Upload large Markdown documents with images (screenshots, diagrams, etc.) to Confluence without size limits.
+
+### Why v2 Script?
+
+The `upload_confluence_v2.py` script was created to solve critical issues:
+
+1. **MCP Size Limits** - MCP cannot handle large documents
+2. **Image HTML Escaping** - Raw XML in markdown appeared as literal text
+3. **Attachment Handling** - `MermaidConfluenceRenderer` broke regular images
+4. **Large Documents** - Need to upload 1000+ line documents with multiple images
+
+### Quick Start
+
+**1. Prepare Your Document**
+
+Create markdown with standard image syntax:
+
+```markdown
+# Technical Architecture
+
+## Overview
+
+This document describes our system architecture.
+
+## Architecture Diagram
+
+![High-Level Architecture](./diagrams/architecture.png)
+
+*Figure 1: System Architecture*
+
+## Screenshots
+
+![Dashboard](./images/dashboard.png)
+```
+
+**2. Prepare Images**
+
+If using Mermaid or PlantUML diagrams, convert them to PNG/SVG first:
+
+```bash
+# Option A: Use design-doc-mermaid skill
+Skill: "design-doc-mermaid"
+# Follow prompts to convert Mermaid diagrams
+
+# Option B: Use plantuml skill
+Skill: "plantuml"
+# Follow prompts to convert PlantUML diagrams
+
+# Option C: Manual conversion
+mmdc -i architecture.mmd -o architecture.png -b transparent
+plantuml deployment.puml -tpng
+```
+
+**3. Upload to Confluence**
+
+```bash
+# Update existing page
+python3 ~/.claude/skills/confluence/scripts/upload_confluence_v2.py \
+    document.md --id 780369923
+
+# Create new page
+python3 ~/.claude/skills/confluence/scripts/upload_confluence_v2.py \
+    document.md --space ARCP --parent-id 123456
+
+# Dry-run (preview without uploading)
+python3 ~/.claude/skills/confluence/scripts/upload_confluence_v2.py \
+    document.md --id 780369923 --dry-run
+
+# Use custom credentials file
+python3 ~/.claude/skills/confluence/scripts/upload_confluence_v2.py \
+    document.md --id 780369923 --env-file /path/to/.env.jira
+```
+
+### What Happens During Upload
+
+1. **Parse Markdown** - Reads file, extracts frontmatter and title
+2. **Convert to Storage Format** - Uses md2cf's base `ConfluenceRenderer`
+3. **Detect Images** - Finds all `![alt](path)` references
+4. **Upload Page Content** - Updates/creates page via REST API
+5. **Upload Attachments** - Uploads image files (skips if already exist)
+6. **Verify Success** - Returns page URL and version number
+
+### Key Features
+
+**✅ Correct Image Handling:**
+- Uses markdown image syntax: `![Description](./path/to/image.png)`
+- md2cf converts to proper Confluence storage format
+- Images render correctly (not as literal text)
+
+**✅ Smart Attachment Upload:**
+- Checks if attachment already exists before uploading
+- Skips re-upload by default (use `--force-reupload` to override)
+- Supports PNG, JPG, SVG, GIF, PDF formats
+
+**✅ No Size Limits:**
+- Bypasses MCP entirely
+- Uses REST API directly
+- Handles documents > 1MB easily
+- Tested with 1300+ line documents
+
+**✅ Error Handling:**
+- Clear error messages
+- Validates file paths before upload
+- Checks page permissions
+- Reports upload progress
+
+### Common Patterns
+
+**Pattern 1: Technical Document with Diagrams**
+
+```bash
+# 1. Create markdown with Mermaid/PlantUML code
+# 2. Convert diagrams to images using appropriate skill
+Skill: "design-doc-mermaid"  # or "plantuml"
+
+# 3. Update markdown to reference generated images
+# ![Architecture](./diagrams/architecture.png)
+
+# 4. Upload to Confluence
+python3 ~/.claude/skills/confluence/scripts/upload_confluence_v2.py \
+    technical-doc.md --id 780369923
+```
+
+**Pattern 2: Documentation with Screenshots**
+
+```bash
+# 1. Create markdown with image references
+# ![Dashboard](./screenshots/dashboard.png)
+
+# 2. Upload directly (images already exist)
+python3 ~/.claude/skills/confluence/scripts/upload_confluence_v2.py \
+    user-guide.md --id 456789
+```
+
+**Pattern 3: Large Multi-Section Document**
+
+```bash
+# Works with large documents (> 500KB)
+python3 ~/.claude/skills/confluence/scripts/upload_confluence_v2.py \
+    comprehensive-guide.md --id 123456
+```
+
+### Differences from v1 Script
+
+| Feature | v1 (`upload_confluence.py`) | v2 (`upload_confluence_v2.py`) |
+|---------|----------------------------|-------------------------------|
+| **Renderer** | MermaidConfluenceRenderer | Base ConfluenceRenderer |
+| **Regular Images** | ❌ Broken (attachments list overwritten) | ✅ Works correctly |
+| **Mermaid Support** | ✅ Built-in (but breaks images) | Convert to PNG first |
+| **PlantUML Support** | ❌ Not supported | Convert to PNG first |
+| **Error Handling** | ⚠️  Basic | ✅ Comprehensive |
+| **Large Documents** | ⚠️  May fail | ✅ Tested with 1MB+ |
+| **Skip Existing Attachments** | ❌ No | ✅ Yes (default) |
+| **HTML Escaping Issue** | ❌ Possible | ✅ Fixed |
+
+**Recommendation:** Use v2 for all new work. v1 remains for backward compatibility only.
+
+## Image Handling and Diagram Integration
+
+### Overview
+
+The confluence skill integrates with diagram generation skills to provide comprehensive image and diagram support:
+
+- **design-doc-mermaid skill** - Mermaid diagram conversion
+- **plantuml skill** - PlantUML diagram conversion
+- **Regular images** - PNG, JPG, SVG, GIF support
+
+### The Correct Workflow
+
+**Step 1: Convert Diagrams to Images (If Needed)**
+
+```bash
+# For Mermaid diagrams
+Skill: "design-doc-mermaid"
+# Converts ```mermaid blocks to PNG/SVG files
+
+# For PlantUML diagrams
+Skill: "plantuml"
+# Converts .puml files to PNG/SVG files
+```
+
+**Step 2: Reference Images in Markdown**
+
+Use standard markdown image syntax:
+
+```markdown
+# ✅ CORRECT - Standard markdown syntax
+![Architecture Diagram](./diagrams/architecture.png)
+![Component Diagram](./diagrams/components.svg)
+![Screenshot](./images/dashboard.jpg)
+
+# ❌ WRONG - Don't use raw Confluence XML
+<ac:image><ri:attachment ri:filename="diagram.png"/></ac:image>
+
+# ❌ WRONG - Don't use Mermaid code blocks directly
+```mermaid
+graph TD
+  A --> B
+```
+```
+
+**Step 3: Upload to Confluence**
+
+```bash
+python3 ~/.claude/skills/confluence/scripts/upload_confluence_v2.py \
+    document.md --id 780369923
+```
+
+### Why This Approach?
+
+**Problem with MermaidConfluenceRenderer:**
+- Overwrites parent's `attachments` attribute
+- Uses dict format instead of string paths
+- Breaks regular markdown image detection
+- Causes "string indices must be integers" errors
+
+**Solution:**
+1. Convert diagrams to images separately (using diagram skills)
+2. Use base `ConfluenceRenderer` (not `MermaidConfluenceRenderer`)
+3. Reference all images (diagrams + regular) with markdown syntax
+4. Upload everything together
+
+### HTML Escaping Issue (CRITICAL)
+
+**Problem:**
+If you put raw Confluence XML in markdown:
+```markdown
+<ac:image><ri:attachment ri:filename="diagram.png"/></ac:image>
+```
+
+md2cf HTML-escapes it:
+```
+&lt;ac:image&gt;&lt;ri:attachment ri:filename="diagram.png"/&gt;&lt;/ac:image&gt;
+```
+
+Result: Text appears literally on Confluence page.
+
+**Solution:**
+Always use markdown syntax:
+```markdown
+![Diagram](./diagrams/diagram.png)
+```
+
+md2cf converts to proper storage format:
+```xml
+<ac:image ac:alt="Diagram">
+  <ri:attachment ri:filename="diagram.png"/>
+</ac:image>
+```
+
+### Integration with Diagram Skills
+
+**Using design-doc-mermaid:**
+
+```bash
+# 1. Invoke skill
+Skill: "design-doc-mermaid"
+
+# 2. Provide Mermaid diagram code when prompted
+
+# 3. Skill generates PNG/SVG files
+
+# 4. Reference in markdown
+![Architecture](./diagrams/architecture.png)
+
+# 5. Upload with confluence skill
+python3 ~/.claude/skills/confluence/scripts/upload_confluence_v2.py \
+    document.md --id 780369923
+```
+
+**Using plantuml:**
+
+```bash
+# 1. Invoke skill
+Skill: "plantuml"
+
+# 2. Provide PlantUML code when prompted
+
+# 3. Skill generates PNG/SVG files
+
+# 4. Reference in markdown
+![Component Diagram](./diagrams/components.png)
+
+# 5. Upload with confluence skill
+python3 ~/.claude/skills/confluence/scripts/upload_confluence_v2.py \
+    document.md --id 780369923
+```
+
+### File Size Recommendations
+
+- **PNG Screenshots:** < 500KB (optimize with pngquant if needed)
+- **PNG Diagrams:** Usually < 100KB
+- **SVG Diagrams:** < 50KB (preferred for diagrams)
+- **JPG Photos:** < 1MB at 80-85% quality
 
 ## Downloading Confluence Pages
 
@@ -297,17 +649,28 @@ Assistant workflow:
 4. Optionally fetch full content if requested
 ```
 
-### Quick Start: Converting Markdown with Mermaid
+### Quick Start: Converting Markdown with Diagrams
 
 ```markdown
-User: "Convert this Markdown document with Mermaid diagrams to Confluence"
+User: "Convert this Markdown document with diagrams to Confluence"
 
 Assistant workflow:
-1. Parse Markdown content
-2. Extract Mermaid diagram blocks
-3. Render each diagram to PNG using mermaid-cli (mmdc command)
+1. **Check for PlantUML diagrams FIRST**:
+   - Look for ```puml or ```plantuml code blocks
+   - Look for ![](*.puml) image links to .puml files
+   - **If PlantUML diagrams found** → **STOP and invoke PlantUML skill FIRST**:
+     - Path: `/Users/richardhightower/.claude/skills/plantuml`
+     - Action: Convert diagrams to images using PlantUML skill's markdown processing workflow
+     - Script: `python scripts/process_markdown_puml.py <file.md> --format png`
+     - Result: Creates `<file>_with_images.md` with diagrams converted to `![](images/*.png)` references
+     - **Use the transformed markdown** for Confluence upload
+   - **Reason**: Confluence does not natively render PlantUML code blocks
+2. **Check for Mermaid diagrams** (if no PlantUML found):
+   - Extract Mermaid diagram blocks
+   - Render each diagram to PNG using mermaid-cli (mmdc command)
+3. Parse remaining Markdown content
 4. **IMPORTANT**: The Atlassian MCP does NOT support attachment uploads directly
-5. **Two Options for Diagrams**:
+5. **Two Options for Diagram Upload**:
    **Option A (Recommended)**: Use mark CLI tool which handles attachments:
       - Save markdown file with metadata comments
       - Use mark CLI to publish (includes attachment upload)
@@ -318,7 +681,8 @@ Assistant workflow:
 6. Create or update Confluence page with diagram references
 7. Return success with page URL
 
-**CRITICAL**: Always use mark CLI for production workflows with diagrams.
+**CRITICAL**: Always check for PlantUML diagrams first and convert them using the PlantUML skill before proceeding.
+Always use mark CLI for production workflows with diagrams.
 The MCP tools are best for simple text-only pages.
 ```
 
@@ -1101,19 +1465,25 @@ lastModified >= now("-90d")
 User: "Create a Confluence page from this Markdown document in the DEV space"
 
 Assistant Steps:
-1. Parse Markdown content
-2. Extract any Mermaid diagrams
-3. Render Mermaid diagrams to images
-4. Convert Markdown to Wiki Markup
-5. Upload diagram images as attachments
-6. Replace Mermaid blocks with image references
-7. Call confluence_create_page with:
+1. **Check for PlantUML diagrams FIRST**:
+   - Look for ```puml or ```plantuml code blocks
+   - Look for ![](*.puml) image links
+   - **If found**: Invoke PlantUML skill at `/Users/richardhightower/.claude/skills/plantuml`
+   - Convert using: `python scripts/process_markdown_puml.py <file.md> --format png`
+   - Use transformed markdown (`*_with_images.md`) for remaining steps
+2. Parse Markdown content
+3. Extract any Mermaid diagrams
+4. Render Mermaid diagrams to images
+5. Convert Markdown to Wiki Markup
+6. Upload diagram images as attachments (use mark CLI for production)
+7. Replace diagram blocks with image references
+8. Call confluence_create_page with:
    - space_key = "DEV"
    - title = extracted from # heading or user input
    - content = converted Wiki Markup
    - content_format = "wiki"
-8. Add labels if mentioned
-9. Return page URL and ID
+9. Add labels if mentioned
+10. Return page URL and ID
 ```
 
 ### Workflow 2: Update Existing Page
@@ -1122,18 +1492,21 @@ Assistant Steps:
 User: "Update the 'API Authentication' page in DEV space with this new content"
 
 Assistant Steps:
-1. Search for page using confluence_search:
+1. **Check for PlantUML diagrams FIRST** (same as Workflow 1 step 1):
+   - If found, convert using PlantUML skill before proceeding
+   - Use transformed markdown for remaining steps
+2. Search for page using confluence_search:
    - query = 'space = "DEV" AND title = "API Authentication"'
-2. Get page_id from results
-3. Fetch current page with confluence_get_page
-4. Convert new content to Wiki Markup
-5. Handle any Mermaid diagrams
-6. Call confluence_update_page with:
+3. Get page_id from results
+4. Fetch current page with confluence_get_page
+5. Convert new content to Wiki Markup
+6. Handle any Mermaid diagrams
+7. Call confluence_update_page with:
    - page_id = from step 2
    - title = keep existing or update
    - content = new Wiki Markup
    - version_comment = "Updated via Claude Code"
-7. Return success with URL
+8. Return success with URL
 ```
 
 ### Workflow 3: Search and Summarize
@@ -1159,10 +1532,12 @@ User: "Sync all Markdown files in docs/ folder to Confluence DEV space"
 Assistant Steps:
 1. Find all .md files in docs/ directory
 2. For each file:
-   a. Add mark metadata headers if missing
-   b. Render any Mermaid diagrams
-   c. Use mark CLI to sync to Confluence
-   d. OR use MCP tools to create/update pages
+   a. **Check for PlantUML diagrams** (```puml blocks or .puml links)
+   b. **If PlantUML found**: Invoke PlantUML skill to convert diagrams first
+   c. Add mark metadata headers if missing
+   d. Render any Mermaid diagrams
+   e. Use mark CLI to sync to Confluence (handles attachments)
+   f. OR use MCP tools to create/update pages (text-only)
 3. Maintain page hierarchy based on folder structure
 4. Add labels based on folder names or frontmatter
 5. Generate sync report with URLs
@@ -1184,6 +1559,108 @@ Assistant Steps:
 4. Return converted Markdown
 5. Note any elements that couldn't be converted
 ```
+
+## Reference Documentation
+
+The confluence skill includes comprehensive reference documentation in the `references/` directory:
+
+### Available References
+
+**1. Confluence Storage Format Reference**
+- **File:** `references/confluence_storage_format.md`
+- **Topics:**
+  - What is storage format and why it matters
+  - Common elements (text, headings, code blocks, images, tables, lists)
+  - Confluence-specific macros (info panels, expand, TOC)
+  - Converting Markdown to storage format with md2cf
+  - HTML escaping issues and solutions
+  - REST API upload requirements
+  - Image attachment workflow
+  - Common pitfalls and how to avoid them
+
+**2. Image Handling Best Practices**
+- **File:** `references/image_handling_best_practices.md`
+- **Topics:**
+  - Supported image types (regular, Mermaid, PlantUML)
+  - Complete workflows for each image type
+  - Integration with `design-doc-mermaid` skill
+  - Integration with `plantuml` skill
+  - How md2cf converts images
+  - Common mistakes and fixes
+  - Recommended workflows with examples
+  - File size guidelines
+  - Performance optimization
+
+**3. Troubleshooting Guide**
+- **File:** `references/troubleshooting_guide.md`
+- **Topics:**
+  - Critical issues (MCP size limits, images as text, string errors)
+  - Markdown conversion issues
+  - API and authentication errors
+  - File and path problems
+  - Version and update conflicts
+  - Performance issues
+  - Debugging techniques
+  - Prevention checklist
+
+### Quick Reference Lookup
+
+**Problem: Images appear as literal text**
+→ See: `references/troubleshooting_guide.md` → "Images Appear as Literal Text"
+→ Solution: Use markdown syntax `![](path)`, not raw XML
+
+**Problem: MCP size limit error**
+→ See: `references/troubleshooting_guide.md` → "MCP Size Limit Exceeded"
+→ Solution: Use `upload_confluence_v2.py` script instead
+
+**Problem: Need to understand storage format**
+→ See: `references/confluence_storage_format.md`
+→ Complete guide to Confluence XML format
+
+**Problem: Images not uploading correctly**
+→ See: `references/image_handling_best_practices.md`
+→ Complete workflows for all image types
+
+**Problem: MermaidConfluenceRenderer breaking images**
+→ See: `references/image_handling_best_practices.md` → "Common Mistakes"
+→ Solution: Use base `ConfluenceRenderer`, convert diagrams separately
+
+### Using References
+
+**In Code:**
+```python
+# Reference the docs in comments when implementing
+# See: ~/.claude/skills/confluence/references/confluence_storage_format.md
+# For storage format details
+```
+
+**In Prompts:**
+```markdown
+Before uploading to Confluence, review:
+- references/image_handling_best_practices.md
+- references/troubleshooting_guide.md
+```
+
+**For Learning:**
+```bash
+# Read reference docs to understand best practices
+cat ~/.claude/skills/confluence/references/image_handling_best_practices.md
+```
+
+### Reference Documentation Updates
+
+These references are maintained based on real-world usage and issues encountered:
+
+- **v2.1.0 (Current):**
+  - Added comprehensive storage format guide
+  - Added image handling best practices
+  - Added troubleshooting guide with all known issues
+  - Documented MCP size limit issue
+  - Documented HTML escaping issue
+  - Documented MermaidConfluenceRenderer problems
+
+**Contributing:**
+When encountering new issues or discovering better practices, update the appropriate reference document to help future users.
 
 ## Troubleshooting
 

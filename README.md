@@ -282,6 +282,190 @@ Claude Code will automatically:
 - Handle page hierarchies
 - Follow best practices from this skill
 
+## Uploading Markdown to Confluence
+
+The skill includes a powerful upload script (`scripts/upload_confluence.py`) that converts Markdown files to Confluence pages.
+
+### Quick Upload Examples
+
+**Smart upload (reads metadata from frontmatter):**
+```bash
+python3 ~/.claude/skills/confluence/scripts/upload_confluence.py page.md
+```
+
+**Update specific page by ID:**
+```bash
+python3 ~/.claude/skills/confluence/scripts/upload_confluence.py page.md --id 450855912
+```
+
+**Create new page in a space:**
+```bash
+python3 ~/.claude/skills/confluence/scripts/upload_confluence.py page.md --space ARCP --parent-id 123456
+```
+
+**Preview without uploading:**
+```bash
+python3 ~/.claude/skills/confluence/scripts/upload_confluence.py page.md --dry-run
+```
+
+### Download → Edit → Upload Workflow
+
+The most powerful feature is the seamless workflow for updating existing pages:
+
+```bash
+# 1. Download a page (gets frontmatter with all metadata)
+python3 ~/.claude/skills/confluence/scripts/download_confluence.py 450855912
+
+# 2. Edit the markdown file locally
+vim Data_Source_Registry_Manager_API.md
+
+# 3. Upload changes (reads everything from frontmatter - zero configuration!)
+python3 ~/.claude/skills/confluence/scripts/upload_confluence.py Data_Source_Registry_Manager_API.md
+```
+
+The frontmatter from the download contains:
+- Page ID (for updates)
+- Space key
+- Current version number (auto-increments)
+- Parent page ID
+- Title
+
+### Mermaid Diagram Support
+
+Mermaid diagrams in your Markdown are automatically rendered to SVG images and uploaded as attachments:
+
+```markdown
+## Architecture Diagram
+
+```mermaid
+graph TD
+    A[Client] --> B[Server]
+    B --> C[Database]
+```
+```
+
+Requirements:
+```bash
+npm install -g @mermaid-js/mermaid-cli
+```
+
+### Credential Discovery
+
+The upload script searches for credentials in this order:
+
+1. Environment variables (`CONFLUENCE_URL`, `CONFLUENCE_USERNAME`, `CONFLUENCE_API_TOKEN`)
+2. `.env` in current directory
+3. `.env.confluence` in current directory
+4. `.env.jira` in current directory
+5. `.env.atlassian` in current directory
+6. Walk up parent directories for above files
+7. MCP config (`~/.config/mcp/.mcp.json`)
+
+Create a `.env` file with your credentials:
+```bash
+CONFLUENCE_URL=https://your-domain.atlassian.net
+CONFLUENCE_USERNAME=your.email@example.com
+CONFLUENCE_API_TOKEN=your_api_token_here
+```
+
+See `examples/.env.confluence.example` for a template.
+
+### Upload CLI Options
+
+```
+usage: upload_confluence.py [-h] [--id PAGE_ID] [--space SPACE] [--title TITLE]
+                            [--parent-id PARENT_ID] [--ignore-frontmatter]
+                            [--dry-run] [--env-file ENV_FILE]
+                            [--update-frontmatter] [--output-dir OUTPUT_DIR]
+                            file
+
+positional arguments:
+  file                  Markdown file to upload
+
+options:
+  --id PAGE_ID          Page ID (for updates)
+  --space SPACE         Space key (required for new pages)
+  --title TITLE         Page title (overrides frontmatter/H1)
+  --parent-id PARENT_ID Parent page ID (specify parent to move page)
+  --ignore-frontmatter  Ignore parent_id in frontmatter (update page in place without moving)
+  --dry-run             Preview without uploading
+  --env-file ENV_FILE   Path to .env file with credentials
+  --update-frontmatter  Update markdown file frontmatter after upload
+  --output-dir OUTPUT_DIR Directory for generated diagrams
+```
+
+**Parent Relationship Control** ⚠️ IMPORTANT
+
+The script's handling of parent relationships requires attention during migrations:
+
+- **Default behavior**: Uses `parent.id` from YAML frontmatter if present
+- **`--ignore-frontmatter`**: Ignores frontmatter parent, updates content only
+- **`--parent-id`**: Explicitly sets parent (overrides frontmatter)
+- **Combined**: `--ignore-frontmatter --parent-id X` = full control
+
+**Common Scenarios**:
+
+```bash
+# Content-only update (no parent change)
+python3 upload_confluence.py --id 123456 --ignore-frontmatter page.md
+
+# Content update + explicit move to new parent
+python3 upload_confluence.py --id 123456 --parent-id 789012 --ignore-frontmatter page.md
+
+# Use frontmatter parent (legacy behavior)
+python3 upload_confluence.py --id 123456 page.md
+```
+
+**⚠️ Critical Warning**: When restoring content from backup files after moving pages, always use `--ignore-frontmatter` to prevent inadvertent moves back to original parents. See [PARENT_RELATIONSHIP_GUIDE.md](PARENT_RELATIONSHIP_GUIDE.md) for details.
+
+### Frontmatter Example
+
+When you download a page, it includes complete metadata:
+
+```yaml
+---
+title: Data Source Registry Manager API
+confluence:
+  id: '450855912'
+  space: ARCP
+  type: page
+  version: 2
+confluence_url: https://your-domain.atlassian.net/wiki/spaces/ARCP/pages/450855912
+parent:
+  id: '438862162'
+  title: PDR Components
+  file: PDR_Components.md
+breadcrumb:
+  - id: '205127682'
+    title: Platform Home
+  - id: '438862162'
+    title: PDR Components
+  - id: '450855912'
+    title: Data Source Registry Manager API
+exported_at: '2025-11-06 12:03:44'
+exported_by: confluence_downloader
+---
+```
+
+On upload, the script:
+- Reads `confluence.id` → Updates existing page
+- Reads `confluence.version` → Auto-increments to version 3
+- Reads `confluence.space` → Uses for creation if no ID
+- Reads `parent.id` → Sets parent page relationship
+
+### Installation
+
+Install Python dependencies:
+```bash
+cd ~/.claude/skills/confluence/scripts
+pip3 install -r requirements.txt
+```
+
+Optional (for Mermaid diagrams):
+```bash
+npm install -g @mermaid-js/mermaid-cli
+```
+
 ## Features
 
 ### Page Management
@@ -334,7 +518,10 @@ Claude Code will automatically:
 ├── SKILL.md                          # Detailed skill documentation
 ├── QUICK_REFERENCE.md                # Command cheat sheet
 ├── INSTALLATION.md                   # Installation guide
+├── PARENT_RELATIONSHIP_GUIDE.md      # Parent relationship handling guide (⚠️ CRITICAL)
 ├── scripts/
+│   ├── upload_confluence.py          # Upload Markdown to Confluence
+│   ├── download_confluence.py        # Download Confluence pages to Markdown
 │   ├── convert_markdown_to_wiki.py   # Markdown → Wiki Markup converter
 │   ├── render_mermaid.py             # Mermaid diagram renderer
 │   └── generate_mark_metadata.py     # mark metadata generator
@@ -367,6 +554,21 @@ Quick command reference for:
 - CQL search examples
 - mark CLI commands
 - Python script usage
+
+### PARENT_RELATIONSHIP_GUIDE.md ⚠️ CRITICAL
+**Essential reading for migrations and content restoration:**
+- Root cause analysis of parent relationship issues
+- New `--ignore-frontmatter` and `--parent-id` options
+- Usage examples and decision matrix
+- Migration workflow patterns
+- Troubleshooting parent move issues
+- PDR migration case study
+
+**Read this guide before**:
+- Large-scale documentation restructures
+- Content restoration after moves
+- Batch page migrations
+- Any operation involving parent relationships
 
 ### references/wiki_markup_guide.md
 Complete Wiki Markup syntax reference:

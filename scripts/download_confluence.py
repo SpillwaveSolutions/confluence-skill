@@ -27,8 +27,14 @@ from urllib.parse import urljoin, urlparse, quote
 
 import requests
 import yaml
-from dotenv import load_dotenv
 from markdownify import markdownify as md
+
+# Import shared credential discovery
+try:
+    from confluence_auth import get_confluence_credentials
+except ImportError:
+    print("ERROR: confluence_auth module not found. Ensure it's in the same directory.", file=sys.stderr)
+    sys.exit(1)
 
 # Configure logging
 logging.basicConfig(
@@ -644,41 +650,36 @@ class ConfluenceDownloader:
         return safe.strip('_')
 
 
-def load_configuration(env_file: str, output_override: Optional[str] = None) -> Dict:
-    """Load configuration from .env file."""
-    env_path = Path(env_file).expanduser()
+def load_configuration(env_file: Optional[str] = None, output_override: Optional[str] = None) -> Dict:
+    """
+    Load configuration using shared credential discovery.
 
-    if not env_path.exists():
-        logger.error(f"Environment file not found: {env_path}")
-        logger.info("\nCreate a .env file with:")
+    Args:
+        env_file: Optional path to specific .env file
+        output_override: Optional output directory override
+
+    Returns:
+        Dict with confluence_url, username, api_token, output_dir
+    """
+    try:
+        creds = get_confluence_credentials(env_file=env_file)
+    except ValueError as e:
+        logger.error(f"Credential discovery failed: {e}")
+        logger.info("\nCreate one of these files with credentials:")
+        logger.info("  .env, .env.confluence, .env.jira, .env.atlassian")
+        logger.info("\nRequired variables:")
         logger.info("  CONFLUENCE_URL=https://yourcompany.atlassian.net")
         logger.info("  CONFLUENCE_USERNAME=your.email@company.com")
         logger.info("  CONFLUENCE_API_TOKEN=your_api_token")
         logger.info("\nGet API Token: https://id.atlassian.com/manage-profile/security/api-tokens")
         sys.exit(1)
 
-    load_dotenv(env_path)
-
-    config = {
-        'confluence_url': os.getenv('CONFLUENCE_URL'),
-        'username': os.getenv('CONFLUENCE_USERNAME'),
-        'api_token': os.getenv('CONFLUENCE_API_TOKEN'),
+    return {
+        'confluence_url': creds['url'],
+        'username': creds['username'],
+        'api_token': creds['token'],
         'output_dir': output_override or os.getenv('CONFLUENCE_OUTPUT_DIR', 'confluence_docs')
     }
-
-    # Validate required fields
-    required = ['confluence_url', 'username', 'api_token']
-    missing = [k for k in required if not config[k]]
-
-    if missing:
-        logger.error(f"Missing required environment variables: {', '.join(missing.upper())}")
-        logger.info("\nCheck your .env file has all required variables:")
-        logger.info("  CONFLUENCE_URL=https://yourcompany.atlassian.net")
-        logger.info("  CONFLUENCE_USERNAME=your.email@company.com")
-        logger.info("  CONFLUENCE_API_TOKEN=your_api_token")
-        sys.exit(1)
-
-    return config
 
 
 def main():
