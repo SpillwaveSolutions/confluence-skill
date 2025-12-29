@@ -1,6 +1,17 @@
-# Markdown ↔ Wiki Markup Conversion Guide
+# Markdown to Wiki Markup Conversion Guide
 
-This guide provides detailed conversion rules and examples for converting between Markdown and Confluence Wiki Markup.
+Detailed conversion rules and examples for converting between Markdown and Confluence Wiki Markup.
+
+## Table of Contents
+
+- [Conversion Matrix](#conversion-matrix)
+- [Links](#links)
+- [Images](#images)
+- [Tables](#tables)
+- [Code Blocks](#code-blocks)
+- [Blockquotes](#blockquotes)
+- [Special Elements](#special-elements)
+- [Limitations](#limitations)
 
 ## Conversion Matrix
 

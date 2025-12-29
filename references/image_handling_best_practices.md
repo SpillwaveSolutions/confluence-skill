@@ -1,10 +1,19 @@
 # Image Handling Best Practices for Confluence
 
-**Purpose:** Guidelines for correctly handling images when uploading to Confluence.
+Guidelines for correctly handling images when uploading to Confluence.
 
-## ⚠️ CRITICAL: DO NOT USE MCP FOR PAGE UPLOADS
+## Table of Contents
 
-**MCP has size limits** and cannot upload large documents with images. Always use the REST API directly via the confluence skill's upload scripts.
+- [MCP Size Limits](#mcp-size-limits)
+- [Image Type Support](#image-type-support)
+- [Workflow for Each Image Type](#workflow-for-each-image-type)
+- [Common Mistakes](#common-mistakes)
+- [Recommended Workflow](#recommended-workflow)
+- [File Size Guidelines](#file-size-guidelines)
+
+## MCP Size Limits
+
+MCP has size limits and cannot upload large documents with images. Use the REST API directly via the upload scripts.
 
 ## Image Type Support
 

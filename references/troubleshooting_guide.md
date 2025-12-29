@@ -1,6 +1,17 @@
 # Confluence Upload Troubleshooting Guide
 
-**Purpose:** Solutions to common errors and issues when uploading to Confluence.
+Solutions to common errors and issues when uploading to Confluence.
+
+## Table of Contents
+
+- [Critical Issues](#critical-issues)
+- [Markdown Conversion Issues](#markdown-conversion-issues)
+- [API and Authentication Issues](#api-and-authentication-issues)
+- [File and Path Issues](#file-and-path-issues)
+- [Version and Update Issues](#version-and-update-issues)
+- [Performance Issues](#performance-issues)
+- [Debugging Techniques](#debugging-techniques)
+- [Prevention Checklist](#prevention-checklist)
 
 ## Critical Issues
 
