@@ -1,6 +1,16 @@
 # Confluence Storage Format Reference
 
-**Purpose:** Understanding how Confluence stores and renders page content.
+Understanding how Confluence stores and renders page content.
+
+## Table of Contents
+
+- [What is Storage Format](#what-is-storage-format)
+- [Common Storage Format Elements](#common-storage-format-elements)
+- [Confluence Macros](#confluence-macros)
+- [Converting Markdown to Storage Format](#converting-markdown-to-storage-format)
+- [HTML Escaping Issues](#html-escaping-issues)
+- [REST API Upload](#rest-api-upload)
+- [Common Pitfalls](#common-pitfalls)
 
 ## What is Storage Format?
 

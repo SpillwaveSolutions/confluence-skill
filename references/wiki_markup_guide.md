@@ -1,6 +1,19 @@
-# Confluence Wiki Markup Complete Reference
+# Confluence Wiki Markup Reference
 
-This guide provides a comprehensive reference for Confluence Wiki Markup syntax with examples.
+Complete reference for Confluence Wiki Markup syntax with examples.
+
+## Table of Contents
+
+- [Basic Text Formatting](#basic-text-formatting)
+- [Headings](#headings)
+- [Lists](#lists)
+- [Links](#links)
+- [Tables](#tables)
+- [Images](#images)
+- [Code Blocks](#code-blocks)
+- [Macros](#macros)
+- [Panels and Messages](#panels-and-messages)
+- [Special Characters](#special-characters)
 
 ## Basic Text Formatting
 
