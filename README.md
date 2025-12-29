@@ -1,6 +1,39 @@
 # Confluence Skill for Claude Code
 
+[![Agent Skill Standard](https://img.shields.io/badge/Agent%20Skill-Standard-blue)](https://agentskills.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Skilz Compatible](https://img.shields.io/badge/skilz-compatible-green)](https://github.com/SpillwaveSolutions/skilz-cli)
+
 A comprehensive Claude Code skill that provides expert guidance for managing Confluence documentation, including Wiki Markup mastery, Markdown conversion, Mermaid diagram integration, and seamless interaction with the Atlassian MCP server.
+
+---
+
+## Table of Contents
+
+- [What is a Skill?](#what-is-a-skill)
+- [How This Skill Works](#how-this-skill-works)
+- [Installing with Skilz (Universal Installer)](#installing-with-skilz-universal-installer)
+- [Installation Levels](#installation-levels)
+- [Multi-Instance Confluence Support](#multi-instance-confluence-support)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Uploading Markdown to Confluence](#uploading-markdown-to-confluence)
+- [Features](#features)
+- [File Structure](#file-structure)
+- [Key Documentation](#key-documentation)
+- [Common Workflows](#common-workflows)
+- [Best Practices](#best-practices)
+- [Troubleshooting](#troubleshooting)
+- [Integration with Other Skills](#integration-with-other-skills)
+- [Advanced Usage](#advanced-usage)
+- [CI/CD Integration](#cicd-integration-example)
+- [Updates and Maintenance](#updates-and-maintenance)
+- [Support](#support)
+- [Contributing](#contributing)
+- [License](#license)
+- [Related Resources](#related-resources)
+
+---
 
 ## What is a Skill?
 
@@ -15,7 +48,7 @@ Claude Code can discover and use MCP tools automatically, but skills provide the
 
 This skill works hand-in-glove with the **Atlassian MCP server** (`mcp__atlassian-evinova`). The MCP provides raw access to Confluence's API capabilities, while this skill provides:
 
-- **Format conversion expertise** for Markdown ↔ Wiki Markup transformations
+- **Format conversion expertise** for Markdown to Wiki Markup transformations
 - **Diagram rendering workflows** for Mermaid to PNG/SVG conversion
 - **CQL query construction** guidance and examples
 - **mark CLI integration** for Git-to-Confluence synchronization
@@ -23,6 +56,118 @@ This skill works hand-in-glove with the **Atlassian MCP server** (`mcp__atlassia
 - **Troubleshooting guides** for common errors and edge cases
 
 When you ask Claude Code to work with Confluence, this skill ensures operations follow proven patterns, handle format conversions correctly, and maintain documentation quality.
+
+---
+
+## Installing with Skilz (Universal Installer)
+
+The recommended way to install this skill across different AI coding agents is using the **skilz** universal installer.
+
+### Install Skilz
+
+```bash
+pip install skilz
+```
+
+This skill supports [Agent Skill Standard](https://agentskills.io/) which means it supports 14 plus coding agents including Claude Code, OpenAI Codex, Cursor and Gemini.
+
+
+### Git URL Options
+
+You can use either `-g` or `--git` with HTTPS or SSH URLs:
+
+```bash
+# HTTPS URL
+skilz install -g https://github.com/SpillwaveSolutions/confluence-skill
+
+# SSH URL
+skilz install --git git@github.com:SpillwaveSolutions/confluence-skill.git
+```
+
+### Claude Code
+
+Install to user home (available in all projects):
+```bash
+skilz install -g https://github.com/SpillwaveSolutions/confluence-skill
+```
+
+Install to current project only:
+```bash
+skilz install -g https://github.com/SpillwaveSolutions/confluence-skill --project
+```
+
+### OpenCode
+
+Install for [OpenCode](https://opencode.ai):
+```bash
+skilz install -g https://github.com/SpillwaveSolutions/confluence-skill --agent opencode
+```
+
+Project-level install:
+```bash
+skilz install -g https://github.com/SpillwaveSolutions/confluence-skill --project --agent opencode
+```
+
+### Gemini
+
+Project-level install for Gemini:
+```bash
+skilz install -g https://github.com/SpillwaveSolutions/confluence-skill --agent gemini
+```
+
+### OpenAI Codex
+
+Install for OpenAI Codex:
+```bash
+skilz install -g https://github.com/SpillwaveSolutions/confluence-skill --agent codex
+```
+
+Project-level install:
+```bash
+skilz install -g https://github.com/SpillwaveSolutions/confluence-skill --project --agent codex
+```
+
+
+### Install from Skillzwave Marketplace
+```
+# Claude to user home dir ~/.claude/skills
+skilz install SpillwaveSolutions_confluence-skill/confluence
+
+# Claude skill in project folder ./claude/skills
+skilz install SpillwaveSolutions_confluence-skill/confluence --project
+
+# OpenCode install to user home dir ~/.config/opencode/skills
+skilz install SpillwaveSolutions_confluence-skill/confluence --agent opencode
+
+# OpenCode project level
+skilz install SpillwaveSolutions_confluence-skill/confluence --agent opencode --project
+
+# OpenAI Codex install to user home dir ~/.codex/skills
+skilz install SpillwaveSolutions_confluence-skill/confluence
+
+# OpenAI Codex project level ./.codex/skills
+skilz install SpillwaveSolutions_confluence-skill/confluence --agent opencode --project
+
+
+# Gemini CLI (project level) -- only works with project level
+skilz install SpillwaveSolutions_confluence-skill/confluence --agent gemini
+
+```
+
+See this site [skill Listing](https://skillzwave.ai/skill/SpillwaveSolutions__confluence-skill__confluence__SKILL/) to see how to install this exact skill to 14+ different coding agents.
+
+
+### Other Supported Agents
+
+Skilz supports 14+ coding agents including Claude Code, OpenAI Codex, OpenCode, Cursor, Gemini CLI, GitHub Copilot CLI, Windsurf, Qwen Code, Aidr, and more.
+
+For the full list of supported platforms, visit [SkillzWave.ai/platforms](https://skillzwave.ai/platforms/) or see the [skilz-cli GitHub repository](https://github.com/SpillwaveSolutions/skilz-cli)
+
+
+<a href="https://skillzwave.ai/">Largest Agentic Marketplace for AI Agent Skills</a> and
+<a href="https://spillwave.com/">SpillWave: Leaders in AI Agent Development.</a>
+
+---
 
 ## Installation Levels
 
@@ -70,6 +215,8 @@ Claude Code follows this priority order when loading skills:
 3. **Global-level** (`~/.claude/skills/` in home directory)
 
 This allows project-specific customizations to override workspace or global defaults.
+
+---
 
 ## Multi-Instance Confluence Support
 
@@ -159,6 +306,8 @@ This allows you to:
 - Override global Confluence settings for specific projects
 - Maintain separate Confluence configurations without conflicts
 
+---
+
 ## Prerequisites
 
 ### Required MCP Server
@@ -221,25 +370,34 @@ npm install -g @mermaid-js/mermaid-cli
 npm install -g markdown2confluence
 ```
 
+---
+
 ## Quick Start
 
 ### 1. Install the Skill
 
+Using skilz (recommended):
+```bash
+pip install skilz
+skilz install -g https://github.com/SpillwaveSolutions/confluence-skill
+```
+
+Or manually:
 ```bash
 # Global installation
 mkdir -p ~/.claude/skills/
 cd ~/.claude/skills/
-git clone <repository-url> confluence
+git clone https://github.com/SpillwaveSolutions/confluence-skill confluence
 
 # OR workspace installation
 mkdir -p ~/workspace/acme-corp/.claude/skills/
 cd ~/workspace/acme-corp/.claude/skills/
-git clone <repository-url> confluence
+git clone https://github.com/SpillwaveSolutions/confluence-skill confluence
 
 # OR project installation
 mkdir -p /path/to/project/.claude/skills/
 cd /path/to/project/.claude/skills/
-git clone <repository-url> confluence
+git clone https://github.com/SpillwaveSolutions/confluence-skill confluence
 ```
 
 ### 2. Configure Atlassian MCP
@@ -282,6 +440,8 @@ Claude Code will automatically:
 - Handle page hierarchies
 - Follow best practices from this skill
 
+---
+
 ## Uploading Markdown to Confluence
 
 The skill includes a powerful upload script (`scripts/upload_confluence.py`) that converts Markdown files to Confluence pages.
@@ -308,7 +468,7 @@ python3 ~/.claude/skills/confluence/scripts/upload_confluence.py page.md --space
 python3 ~/.claude/skills/confluence/scripts/upload_confluence.py page.md --dry-run
 ```
 
-### Download → Edit → Upload Workflow
+### Download, Edit, Upload Workflow
 
 The most powerful feature is the seamless workflow for updating existing pages:
 
@@ -334,7 +494,7 @@ The frontmatter from the download contains:
 
 Mermaid diagrams in your Markdown are automatically rendered to SVG images and uploaded as attachments:
 
-```markdown
+````markdown
 ## Architecture Diagram
 
 ```mermaid
@@ -342,7 +502,7 @@ graph TD
     A[Client] --> B[Server]
     B --> C[Database]
 ```
-```
+````
 
 Requirements:
 ```bash
@@ -394,7 +554,7 @@ options:
   --output-dir OUTPUT_DIR Directory for generated diagrams
 ```
 
-**Parent Relationship Control** ⚠️ IMPORTANT
+**Parent Relationship Control** (IMPORTANT)
 
 The script's handling of parent relationships requires attention during migrations:
 
@@ -416,7 +576,7 @@ python3 upload_confluence.py --id 123456 --parent-id 789012 --ignore-frontmatter
 python3 upload_confluence.py --id 123456 page.md
 ```
 
-**⚠️ Critical Warning**: When restoring content from backup files after moving pages, always use `--ignore-frontmatter` to prevent inadvertent moves back to original parents. See [PARENT_RELATIONSHIP_GUIDE.md](PARENT_RELATIONSHIP_GUIDE.md) for details.
+**Critical Warning**: When restoring content from backup files after moving pages, always use `--ignore-frontmatter` to prevent inadvertent moves back to original parents. See [PARENT_RELATIONSHIP_GUIDE.md](PARENT_RELATIONSHIP_GUIDE.md) for details.
 
 ### Frontmatter Example
 
@@ -448,12 +608,12 @@ exported_by: confluence_downloader
 ```
 
 On upload, the script:
-- Reads `confluence.id` → Updates existing page
-- Reads `confluence.version` → Auto-increments to version 3
-- Reads `confluence.space` → Uses for creation if no ID
-- Reads `parent.id` → Sets parent page relationship
+- Reads `confluence.id` to update existing page
+- Reads `confluence.version` to auto-increment to version 3
+- Reads `confluence.space` to use for creation if no ID
+- Reads `parent.id` to set parent page relationship
 
-### Installation
+### Script Installation
 
 Install Python dependencies:
 ```bash
@@ -466,6 +626,8 @@ Optional (for Mermaid diagrams):
 npm install -g @mermaid-js/mermaid-cli
 ```
 
+---
+
 ## Features
 
 ### Page Management
@@ -477,8 +639,8 @@ npm install -g @mermaid-js/mermaid-cli
 - Manage page children and relationships
 
 ### Format Conversion
-- Markdown → Confluence Wiki Markup
-- Wiki Markup → Markdown
+- Markdown to Confluence Wiki Markup
+- Wiki Markup to Markdown
 - Preserve formatting and structure
 - Handle nested elements (lists, tables, code blocks)
 - Convert inline formatting (bold, italic, code)
@@ -509,6 +671,8 @@ npm install -g @mermaid-js/mermaid-cli
 - Bulk label management
 - Mass updates with version control
 
+---
+
 ## File Structure
 
 ```
@@ -518,11 +682,11 @@ npm install -g @mermaid-js/mermaid-cli
 ├── SKILL.md                          # Detailed skill documentation
 ├── QUICK_REFERENCE.md                # Command cheat sheet
 ├── INSTALLATION.md                   # Installation guide
-├── PARENT_RELATIONSHIP_GUIDE.md      # Parent relationship handling guide (⚠️ CRITICAL)
+├── PARENT_RELATIONSHIP_GUIDE.md      # Parent relationship handling guide (CRITICAL)
 ├── scripts/
 │   ├── upload_confluence.py          # Upload Markdown to Confluence
 │   ├── download_confluence.py        # Download Confluence pages to Markdown
-│   ├── convert_markdown_to_wiki.py   # Markdown → Wiki Markup converter
+│   ├── convert_markdown_to_wiki.py   # Markdown to Wiki Markup converter
 │   ├── render_mermaid.py             # Mermaid diagram renderer
 │   └── generate_mark_metadata.py     # mark metadata generator
 ├── references/
@@ -534,6 +698,8 @@ npm install -g @mermaid-js/mermaid-cli
 └── assets/
     └── (diagram examples)
 ```
+
+---
 
 ## Key Documentation
 
@@ -555,7 +721,7 @@ Quick command reference for:
 - mark CLI commands
 - Python script usage
 
-### PARENT_RELATIONSHIP_GUIDE.md ⚠️ CRITICAL
+### PARENT_RELATIONSHIP_GUIDE.md (CRITICAL)
 **Essential reading for migrations and content restoration:**
 - Root cause analysis of parent relationship issues
 - New `--ignore-frontmatter` and `--parent-id` options
@@ -581,7 +747,7 @@ Complete Wiki Markup syntax reference:
 
 ### references/conversion_guide.md
 Detailed conversion rules:
-- Markdown → Wiki Markup mappings
+- Markdown to Wiki Markup mappings
 - Edge cases and limitations
 - Nested structure handling
 - Special character escaping
@@ -605,6 +771,8 @@ Architecture and patterns guide for Claude Code instances, documenting:
 - MCP tool usage workflows
 - Format conversion reference
 - Common task patterns
+
+---
 
 ## Common Workflows
 
@@ -656,6 +824,8 @@ Architecture and patterns guide for Claude Code instances, documenting:
 "Add this section to the API documentation page"
 ```
 
+---
+
 ## Best Practices
 
 ### 1. Validate Space Keys
@@ -704,6 +874,8 @@ Track changes with meaningful version comments:
 "Update this page with version comment: Updated API authentication flow"
 ```
 
+---
+
 ## Troubleshooting
 
 ### "Space not found"
@@ -741,6 +913,8 @@ Track changes with meaningful version comments:
 - Ensure API token matches the Confluence instance
 - Use workspace isolation to prevent conflicts
 
+---
+
 ## Integration with Other Skills
 
 This Confluence skill can work alongside other Claude Code skills:
@@ -762,6 +936,8 @@ Convert meeting notes to documentation:
 ```
 "Create Confluence page from these meeting notes in the TEAM space"
 ```
+
+---
 
 ## Advanced Usage
 
@@ -786,6 +962,8 @@ Extend conversion scripts for:
 - Custom Wiki Markup extensions
 - Special formatting requirements
 - Domain-specific patterns
+
+---
 
 ## CI/CD Integration Example
 
@@ -835,6 +1013,8 @@ jobs:
           done
 ```
 
+---
+
 ## Updates and Maintenance
 
 ### Updating the Skill
@@ -864,6 +1044,8 @@ git push team-fork main
 
 This allows sharing customizations across your team.
 
+---
+
 ## Support
 
 For issues or questions:
@@ -876,6 +1058,8 @@ For issues or questions:
 6. **Check Confluence permissions** for your account
 7. **Review CLAUDE.md** for architecture patterns
 
+---
+
 ## Contributing
 
 To improve this skill:
@@ -887,9 +1071,13 @@ To improve this skill:
 5. Update best practices based on experience
 6. Add CQL patterns for common searches
 
+---
+
 ## License
 
 This skill is designed for use with Claude Code and the Atlassian MCP server.
+
+---
 
 ## Related Resources
 
@@ -900,3 +1088,6 @@ This skill is designed for use with Claude Code and the Atlassian MCP server.
 - [mark CLI Tool](https://github.com/kovetskiy/mark)
 - [Mermaid Diagram Syntax](https://mermaid.js.org/)
 - [Atlassian MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/atlassian)
+- [SkillzWave Marketplace](https://skillzwave.ai/)
+- [Agent Skill Standard](https://agentskills.io/)
+- [skilz CLI](https://github.com/SpillwaveSolutions/skilz-cli)
