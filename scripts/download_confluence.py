@@ -713,7 +713,7 @@ Examples:
     )
 
     parser.add_argument('page_ids', nargs='*', help='Page IDs to download')
-    parser.add_argument('--env-file', default='.env', help='Path to .env file (default: .env)')
+    parser.add_argument('--env-file', default=None, help='Path to specific .env file (optional)')
     parser.add_argument('--output-dir', help='Output directory (overrides .env CONFLUENCE_OUTPUT_DIR)')
     parser.add_argument('--download-children', action='store_true', help='Download child pages to subdirectories')
     parser.add_argument('--save-html', action='store_true', help='Save intermediate HTML files for debugging')
